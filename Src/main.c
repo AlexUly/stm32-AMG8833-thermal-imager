@@ -71,59 +71,20 @@ static void MX_I2C1_Init(void);
 /* USER CODE BEGIN 0 */
 
 float buf[64];
-#define RESIZE_X 32
-#define RESIZE_Y 32
 
-float bufIntp[RESIZE_X][RESIZE_Y];
+float bufIntp[64][64];
 uint16_t PaletteWhiteHot[] = {WHITE, 0xE73C, 0xCE59, 0xAD55, 0x8C71, 0x6B6D, 0x528A, 0x3186, 0x10A2, BLACK};
 uint16_t PaletteBlackHot[] = {BLACK, 0x10A2, 0x3186, 0x528A, 0x6B6D, 0x8C71, 0xAD55, 0xCE59, 0xE73C, WHITE};
 uint16_t PaletteRedHot[] = {RED,  0xFA20, 0x8800, ORANGE, 0xFC60, 0xDD24, YELLOW, 0x0011,  0x0010, BLUE};
 
 int DEAD_ZONE = 2;
-float TEMP_LOW = 24;
-float TEMP_HIGH = 36;
+float TEMP_LOW = 0;
+float TEMP_HIGH = 50;
 float TEMP_MAX = -100;
 float TEMP_MIN = 200;
 float TEMP_TARG = 0;
-int MODE = 1;
-int RAW = 1;
-
-double bicubicpol(double x,double y,double p[4][4]){
-
-	double a00, a01, a02, a03;
- 	double a10, a11, a12, a13;
- 	double a20, a21, a22, a23;
- 	double a30, a31, a32, a33;
- 	double x2 = x * x;
-	double x3 = x2 * x;
-	double y2 = y * y;
-	double y3 = y2 * y;
-
-	a00 = p[1][1];
-	a01 = -.5*p[1][0] + .5*p[1][2];
-	a02 = p[1][0] - 2.5*p[1][1] + 2*p[1][2] - .5*p[1][3];
-	a03 = -.5*p[1][0] + 1.5*p[1][1] - 1.5*p[1][2] + .5*p[1][3];
-	a10 = -.5*p[0][1] + .5*p[2][1];
-	a11 = .25*p[0][0] - .25*p[0][2] - .25*p[2][0] + .25*p[2][2];
-	a12 = -.5*p[0][0] + 1.25*p[0][1] - p[0][2] + .25*p[0][3] + .5*p[2][0] - 1.25*p[2][1] + p[2][2] - .25*p[2][3];
-	a13 = .25*p[0][0] - .75*p[0][1] + .75*p[0][2] - .25*p[0][3] - .25*p[2][0] + .75*p[2][1] - .75*p[2][2] + .25*p[2][3];
-	a20 = p[0][1] - 2.5*p[1][1] + 2*p[2][1] - .5*p[3][1];
-	a21 = -.5*p[0][0] + .5*p[0][2] + 1.25*p[1][0] - 1.25*p[1][2] - p[2][0] + p[2][2] + .25*p[3][0] - .25*p[3][2];
-	a22 = p[0][0] - 2.5*p[0][1] + 2*p[0][2] - .5*p[0][3] - 2.5*p[1][0] + 6.25*p[1][1] - 5*p[1][2] + 1.25*p[1][3] + 2*p[2][0] - 5*p[2][1] + 4*p[2][2] - p[2][3] - .5*p[3][0] + 1.25*p[3][1] - p[3][2] + .25*p[3][3];
-	a23 = -.5*p[0][0] + 1.5*p[0][1] - 1.5*p[0][2] + .5*p[0][3] + 1.25*p[1][0] - 3.75*p[1][1] + 3.75*p[1][2] - 1.25*p[1][3] - p[2][0] + 3*p[2][1] - 3*p[2][2] + p[2][3] + .25*p[3][0] - .75*p[3][1] + .75*p[3][2] - .25*p[3][3];
-	a30 = -.5*p[0][1] + 1.5*p[1][1] - 1.5*p[2][1] + .5*p[3][1];
-	a31 = .25*p[0][0] - .25*p[0][2] - .75*p[1][0] + .75*p[1][2] + .75*p[2][0] - .75*p[2][2] - .25*p[3][0] + .25*p[3][2];
-	a32 = -.5*p[0][0] + 1.25*p[0][1] - p[0][2] + .25*p[0][3] + 1.5*p[1][0] - 3.75*p[1][1] + 3*p[1][2] - .75*p[1][3] - 1.5*p[2][0] + 3.75*p[2][1] - 3*p[2][2] + .75*p[2][3] + .5*p[3][0] - 1.25*p[3][1] + p[3][2] - .25*p[3][3];
-	a33 = .25*p[0][0] - .75*p[0][1] + .75*p[0][2] - .25*p[0][3] - .75*p[1][0] + 2.25*p[1][1] - 2.25*p[1][2] + .75*p[1][3] + .75*p[2][0] - 2.25*p[2][1] + 2.25*p[2][2] - .75*p[2][3] - .25*p[3][0] + .75*p[3][1] - .75*p[3][2] + .25*p[3][3];
-
-
-	return (a00 + a01 * y + a02 * y2 + a03 * y3) +
-		    (a10 + a11 * y + a12 * y2 + a13 * y3) * x +
-		    (a20 + a21 * y + a22 * y2 + a23 * y3) * x2 +
-		    (a30 + a31 * y + a32 * y2 + a33 * y3) * x3;
-
-}
-
+int MODE = 3;
+int RAW = 0;
 
 void interpolate(){
     double arr[4][4];
@@ -146,15 +107,93 @@ void interpolate(){
 						}
 	        		}
 	        	}
-	          bufIntp[j][i] = (float)bicubicpol((double)(i%f)/f,(double)(j%f)/f ,arr);
-	          if(bufIntp[j][i] > TEMP_MAX)
+	          bufIntp[i][j] = (float)bicubicpol((double)(i%f)/f,(double)(j%f)/f ,arr);
+
+	          if(bufIntp[i][j] > TEMP_MAX)
 	        	TEMP_MAX = bufIntp[j][i];
-	          if(bufIntp[j][i] < TEMP_MIN)
+	          if(bufIntp[i][j] < TEMP_MIN)
 	        	TEMP_MIN = bufIntp[j][i];
 	        }
 		}
 
 
+}
+
+void bilinear_interpolation() {
+    float x_ratio, y_ratio;
+    float *data = buf;
+    float *output = bufIntp;
+	uint32_t input_width = 8;
+	uint32_t input_height = 8;
+	uint32_t output_width = 64;
+	uint32_t output_height = 64;
+
+    if (output_width > 1) {
+        x_ratio = ((float)input_width - 1.0) / ((float)output_width - 1.0);
+    } else {
+        x_ratio = 0;
+    }
+
+    if (output_height > 1) {
+        y_ratio = ((float)input_height - 1.0) / ((float)output_height - 1.0);
+    } else {
+        y_ratio = 0;
+    }
+
+    for (int i = 0; i < output_height; i++) {
+        for (int j = 0; j < output_width; j++) {
+            float x_l = floor(x_ratio * (float)j);
+            float y_l = floor(y_ratio * (float)i);
+            float x_h = ceil(x_ratio * (float)j);
+            float y_h = ceil(y_ratio * (float)i);
+
+            float x_weight = (x_ratio * (float)j) - x_l;
+            float y_weight = (y_ratio * (float)i) - y_l;
+
+            float a = data[(int)y_l * input_width + (int)x_l];
+            float b = data[(int)y_l * input_width + (int)x_h];
+            float c = data[(int)y_h * input_width + (int)x_l];
+            float d = data[(int)y_h * input_width + (int)x_h];
+
+            float pixel = a * (1.0 - x_weight) * (1.0 - y_weight) +
+                          b * x_weight * (1.0 - y_weight) +
+                          c * y_weight * (1.0 - x_weight) +
+                          d * x_weight * y_weight;
+
+            bufIntp[i][j] = pixel;
+        }
+    }
+}
+
+uint16_t redHotCol(float temp){
+	int k;
+	uint16_t ind = (((0 & 0xf8)<<8) + ((0 & 0xfc)<<3) + (0>>3)); ;
+	if(temp > 40.0){
+		k = (50 - temp) * 255 / 10;
+		ind = (((255 & 0xf8)<<8) + ((k & 0xfc)<<3) + (0>>3));
+		return ind;
+	}
+	if(temp > 30.0){
+		k = (temp - 30) * 255 / 10;
+		ind = (((k & 0xf8)<<8) + ((255 & 0xfc)<<3) + (0>>3));
+		return ind;
+	}
+	if(temp > 20.0){
+		k = (30 - temp) * 255 / 10;
+		ind = (((0 & 0xf8)<<8) + ((255 & 0xfc)<<3) + (k>>3));
+		return ind;
+	}
+	if(temp > 10.0){
+		k = (temp - 10.0) * 255 / 10;
+		ind = (((0 & 0xf8)<<8) + ((k & 0xfc)<<3) + (255>>3));
+		return ind;
+	}
+	if(temp > 0.0){
+		k = (10 - temp) * 255 / 10;
+		ind = (((k & 0xf8)<<8) + ((0 & 0xfc)<<3) + (255>>3));
+		return ind;
+	}
+	return ind;
 }
 /* USER CODE END 0 */
 
@@ -199,11 +238,6 @@ int main(void)
 	ILI9341_SetRotation(SCREEN_HORIZONTAL_1);
 
 	switch(MODE % 3){
-	case(0):
-		color = PaletteRedHot;
-		background = BLUE;
-		ILI9341_FillScreen(BLUE);
-		break;
 	case(1):
 		color = PaletteWhiteHot;
 		background = BLACK;
@@ -213,6 +247,11 @@ int main(void)
 		color = PaletteBlackHot;
 		background = WHITE;
 		ILI9341_FillScreen(WHITE);
+		break;
+	case(3):
+		color = PaletteRedHot;
+		background = BLUE;
+		ILI9341_FillScreen(BLUE);
 		break;
 	default:
 		color = PaletteRedHot;
@@ -234,14 +273,24 @@ int main(void)
   while (1)
   {
     /* USER CODE END WHILE */
+
     /* USER CODE BEGIN 3 */
 	  HAL_GPIO_TogglePin(LED_GPIO_Port, LED_Pin);
 	  ILI9341_SetRotation(SCREEN_HORIZONTAL_1);
 	  readPixels(buf , 64);
 	  TEMP_TARG = (buf[28] + buf[29] + buf[36] + buf[37]) / 4;
+	  TEMP_MAX = -100;
+	  TEMP_MIN = 200;
+	  for(int i = 0; i < 8; i++){
+		  for(int j = 0; j < 8; j++){
+			  if(buf[i * 8 + j] > TEMP_MAX)
+			  	 TEMP_MAX = buf[i * 8 + j];
+			  if(buf[i * 8 + j] < TEMP_MAX)
+			  	 TEMP_MIN = buf[i * 8 + j];
+		  }
+	  }
+
 	      if(RAW){
-	    	TEMP_MAX = -100;
-	    	TEMP_MIN = 200;
 	  		for(int i = 0; i < 8; i++){
 	  			for(int j = 0; j < 8; j++){
 	  				if(buf[i * 8 + j] > TEMP_MAX)
@@ -262,23 +311,40 @@ int main(void)
 	  			}
 	  		}
 	      }
+
 	      if(!RAW){
-			  interpolate();
+			 // interpolate();
+	    	  bilinear_interpolation();
 
-				for(int i = 0; i < RESIZE_X; i++){
-					for(int j = 0; j < RESIZE_Y; j++){
+	    	  uint16_t Rgb565;
 
-						if(bufIntp[i][j] < (TEMP_LOW + 0.1)){
-							ILI9341_DrawRectangle(i * 8, j * 8, 8, 8, color[9]);
+
+				for(int i = 0; i < 64; i++){
+					for(int j = 0; j < 64; j++){
+
+						if(bufIntp[i][j] < (TEMP_LOW - 0.1)){
+							ILI9341_DrawRectangle(i * 4, j * 4, 4, 4, color[9]);
 							continue;
 						}
 						if(bufIntp[i][j] > (TEMP_HIGH + 0.1)){
-								ILI9341_DrawRectangle(i * 8, j * 8, 8, 8, color[0]);
+								ILI9341_DrawRectangle(i * 4, j * 4, 4, 4, color[0]);
 								continue;
 						}
-						int index = (TEMP_HIGH - bufIntp[i][j]) / DEAD_ZONE;
-						ILI9341_DrawRectangle(i * 8  , j * 8 , 8, 8, color[index % 10]);
-						static char BufferText[30];
+						int k;
+						switch(MODE){
+						case(1):
+							k = (bufIntp[i][j] - TEMP_LOW) * 255 / (TEMP_MAX - TEMP_LOW);
+							Rgb565 = (((k & 0xf8)<<8) + ((k & 0xfc)<<3) + (k>>3));
+							break;
+						case(2):
+							k = (TEMP_MAX - bufIntp[i][j]) * 255 / (TEMP_MAX - TEMP_LOW);
+							Rgb565 = (((k & 0xf8)<<8) + ((k & 0xfc)<<3) + (k>>3));
+							break;
+						case (3):
+							Rgb565 = redHotCol(bufIntp[i][j]);
+							break;
+						}
+						ILI9341_DrawRectangle(i * 4  , j * 4 , 4, 4, Rgb565);
 					}
 			}
 	      }
@@ -295,7 +361,32 @@ int main(void)
 	  		ILI9341_DrawText(Text, FONT3, 100, 5, color[0], background);
 	  		sprintf(Text, "MODE: %d", MODE);
 	  		ILI9341_DrawText(Text, FONT3, 100, 20, color[0], background);
+	  		/*
+	  		for(int i = 0; i < 64; i++){
+	  				char Text2[16];
+	  				sprintf(Text2, "%.2f ", buf[i]);
+	  				HAL_UART_Transmit(&huart1, Text2, strlen(Text2), HAL_MAX_DELAY);
+	  				if(i % 8 == 0)
+	  					HAL_UART_Transmit(&huart1, "\n" ,1 , HAL_MAX_DELAY);
+	  				HAL_Delay(5);
+	  		}
 
+
+	  		char Text3[32] = "==================================\n";
+	  		HAL_UART_Transmit(&huart1, Text3 ,strlen(Text3) , HAL_MAX_DELAY);
+	  		HAL_Delay(10);
+	  		HAL_UART_Transmit(&huart1, Text3 ,strlen(Text3) , HAL_MAX_DELAY);
+	  		HAL_Delay(30);
+	  		for(int i = 0; i < 32; i++){
+	  			for(int j = 0; j < 32; j++){
+	  				char Text2[16];
+	  				sprintf(Text2, "%.2f ", bufIntp[i][j]);
+	  				HAL_UART_Transmit(&huart1, Text2, strlen(Text2), HAL_MAX_DELAY);
+	  			}
+	  			HAL_UART_Transmit(&huart1, "\n" ,1 , HAL_MAX_DELAY);
+	  		}
+	  		HAL_Delay(60000);
+	  		*/
   }
   /* USER CODE END 3 */
 }
