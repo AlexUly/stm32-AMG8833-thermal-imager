@@ -361,32 +361,6 @@ int main(void)
 	  		ILI9341_DrawText(Text, FONT3, 100, 5, color[0], background);
 	  		sprintf(Text, "MODE: %d", MODE);
 	  		ILI9341_DrawText(Text, FONT3, 100, 20, color[0], background);
-	  		/*
-	  		for(int i = 0; i < 64; i++){
-	  				char Text2[16];
-	  				sprintf(Text2, "%.2f ", buf[i]);
-	  				HAL_UART_Transmit(&huart1, Text2, strlen(Text2), HAL_MAX_DELAY);
-	  				if(i % 8 == 0)
-	  					HAL_UART_Transmit(&huart1, "\n" ,1 , HAL_MAX_DELAY);
-	  				HAL_Delay(5);
-	  		}
-
-
-	  		char Text3[32] = "==================================\n";
-	  		HAL_UART_Transmit(&huart1, Text3 ,strlen(Text3) , HAL_MAX_DELAY);
-	  		HAL_Delay(10);
-	  		HAL_UART_Transmit(&huart1, Text3 ,strlen(Text3) , HAL_MAX_DELAY);
-	  		HAL_Delay(30);
-	  		for(int i = 0; i < 32; i++){
-	  			for(int j = 0; j < 32; j++){
-	  				char Text2[16];
-	  				sprintf(Text2, "%.2f ", bufIntp[i][j]);
-	  				HAL_UART_Transmit(&huart1, Text2, strlen(Text2), HAL_MAX_DELAY);
-	  			}
-	  			HAL_UART_Transmit(&huart1, "\n" ,1 , HAL_MAX_DELAY);
-	  		}
-	  		HAL_Delay(60000);
-	  		*/
   }
   /* USER CODE END 3 */
 }
